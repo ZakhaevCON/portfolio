@@ -280,6 +280,50 @@
     }
 
     // ============================================
+    // Theme Toggle (Light/Dark)
+    // ============================================
+    function initThemeToggle() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (!themeToggle) return;
+
+        const root = document.documentElement;
+
+        function applyTheme(theme) {
+            const isDark = theme === 'dark';
+            root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+            themeToggle.textContent = isDark ? 'Light' : 'Dark';
+        }
+
+        let storedTheme = null;
+        try {
+            storedTheme = localStorage.getItem('theme');
+        } catch (e) {
+            // Ignore storage errors (private mode, blocked cookies, etc.)
+        }
+
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = storedTheme === 'dark' || storedTheme === 'light'
+            ? storedTheme
+            : (prefersDark ? 'dark' : 'light');
+
+        applyTheme(initialTheme);
+
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = root.getAttribute('data-theme') || 'light';
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            applyTheme(nextTheme);
+
+            try {
+                localStorage.setItem('theme', nextTheme);
+            } catch (e) {
+                // Ignore storage errors
+            }
+        });
+    }
+
+    // ============================================
     // Initialize All Functions
     // ============================================
     function init() {
@@ -290,6 +334,7 @@
         }
 
         // Initialize all features
+        initThemeToggle();
         initMobileMenu();
         initSmoothScroll();
         initNavbarScroll();
