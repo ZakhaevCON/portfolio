@@ -291,8 +291,7 @@
         function applyTheme(theme) {
             const isDark = theme === 'dark';
             root.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-            themeToggle.textContent = isDark ? 'Light' : 'Dark';
+            themeToggle.checked = isDark;
         }
 
         let storedTheme = null;
@@ -309,10 +308,8 @@
 
         applyTheme(initialTheme);
 
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = root.getAttribute('data-theme') || 'light';
-            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
+        themeToggle.addEventListener('change', function() {
+            const nextTheme = themeToggle.checked ? 'dark' : 'light';
             applyTheme(nextTheme);
 
             try {

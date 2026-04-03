@@ -252,30 +252,86 @@ a:hover {
 }
 
 .theme-toggle {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    min-height: 44px; /* Accessibility: minimum touch target size */
+    width: 64px;
+    height: 44px; /* Accessibility: minimum touch target size */
+    z-index: var(--z-fixed);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.theme-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+.theme-toggle .slider {
+    position: absolute;
+    inset: 5px;
     border-radius: 999px;
     border: 1px solid var(--color-border);
-    background-color: transparent;
-    color: var(--color-text);
-    cursor: pointer;
-    position: relative;
-    z-index: var(--z-fixed);
-    font-weight: 600;
-    transition: background-color var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+    background-color: rgba(var(--color-primary-rgb), 0.08);
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.theme-toggle:hover {
+.theme-toggle .slider::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background-color: var(--color-bg);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), background-color var(--transition-fast);
+}
+
+.theme-toggle .slider::after {
+    content: "☾\FE0E";
+    position: absolute;
+    right: 8px;
+    top: 4px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.theme-toggle input:checked + .slider {
+    background-color: rgba(var(--color-primary-rgb), 0.18);
+    border-color: rgba(var(--color-primary-rgb), 0.45);
+    box-shadow: var(--shadow-md);
+}
+
+.theme-toggle input:checked + .slider::before {
+    transform: translate(28px, -50%);
+}
+
+.theme-toggle input:checked + .slider::after {
+    content: "☀\FE0E";
+    left: 8px;
+    right: auto;
+}
+
+.theme-toggle:hover .slider {
+    border-color: rgba(var(--color-primary-rgb), 0.6);
+}
+
+.theme-toggle:active .slider::before {
     background-color: var(--color-bg-light);
-    border-color: var(--color-primary);
-    transform: translateY(-1px);
 }
 
-.theme-toggle:active {
-    transform: translateY(0);
+.theme-toggle input:focus-visible + .slider {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .nav-link {
