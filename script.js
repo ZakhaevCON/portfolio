@@ -321,6 +321,63 @@
     }
 
     // ============================================
+    // Gallery Slideshow
+    // ============================================
+    function initSlideshow() {
+        let slideIndex = 1;
+        const slides = document.querySelectorAll(".slide");
+        const dots = document.querySelectorAll(".dot");
+        const prevBtn = document.querySelector(".prev-slide");
+        const nextBtn = document.querySelector(".next-slide");
+
+        if (slides.length === 0) return;
+
+        function showSlides(n) {
+            if (n > slides.length) slideIndex = 1;
+            if (n < 1) slideIndex = slides.length;
+            
+            slides.forEach(slide => slide.style.display = "none");
+            dots.forEach(dot => dot.className = dot.className.replace(" active", ""));
+            
+            slides[slideIndex - 1].style.display = "block";
+            dots[slideIndex - 1].className += " active";
+        }
+
+        // Initialize first slide
+        showSlides(slideIndex);
+
+        // Event listeners for prev/next
+        if (prevBtn) prevBtn.addEventListener('click', () => showSlides(slideIndex -= 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => showSlides(slideIndex += 1));
+
+        // Event listeners for dots
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                slideIndex = index + 1;
+                showSlides(slideIndex);
+            });
+        });
+
+        // Auto slideshow feature
+        let slideInterval = setInterval(() => {
+            slideIndex++;
+            showSlides(slideIndex);
+        }, 5000); // Change image every 5 seconds
+
+        // Pause on hover
+        const slideshowContainer = document.querySelector(".slideshow-container");
+        if (slideshowContainer) {
+            slideshowContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
+            slideshowContainer.addEventListener('mouseleave', () => {
+                slideInterval = setInterval(() => {
+                    slideIndex++;
+                    showSlides(slideIndex);
+                }, 5000);
+            });
+        }
+    }
+
+    // ============================================
     // Initialize All Functions
     // ============================================
     function init() {
@@ -339,6 +396,7 @@
         initContactForm();
         initKeyboardNavigation();
         initLazyLoading();
+        initSlideshow();
 
         // Update active nav link on scroll
         window.addEventListener('scroll', updateActiveNavLink);
