@@ -448,6 +448,362 @@ Features real-time case tracking, secure digital filing, and seamless access acr
         </div>
     </footer>
 
+    <!-- Chatbot Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false, // Prevent Tailwind from overriding existing styles
+            },
+            theme: {
+                extend: {
+                    colors: {
+                        brandblue: {
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chatbot Mount Point -->
+    <div id="chatbot-root"></div>
+    <script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// --- SVGs ---
+const ChatIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+);
+
+const SendIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+);
+
+const UserIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+);
+
+const BotIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+        <circle cx="12" cy="5" r="2"></circle>
+        <path d="M12 7v4"></path>
+        <line x1="8" y1="16" x2="8" y2="16"></line>
+        <line x1="16" y1="16" x2="16" y2="16"></line>
+    </svg>
+);
+
+// --- Mock API Logic ---
+const getBotResponse = (message) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const lowerMsg = message.toLowerCase();
+            let reply = "I'm not exactly sure about that! Try asking about my <strong>skills</strong>, <strong>projects</strong>, or <strong>experience</strong>.";
+            
+            // Greetings
+            if (lowerMsg.match(/\b(hi|hello|hey|greetings|morning|afternoon|evening)\b/)) {
+                reply = "Hello there! I'm Connery's AI assistant. How can I help you learn more about his professional background today?";
+            }
+            // Contact
+            else if (lowerMsg.match(/\b(contact|email|phone|hire|reach|message)\b/)) {
+                reply = "You can use the <a href='#contact' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>contact form</a> below, email at <strong>lilconney766@gmail.com</strong>, or call at <strong>+63 919 2048 986</strong>. Let's work together!";
+            }
+            // Skills & Tech
+            else if (lowerMsg.match(/\b(skill|skills|tech|stack|technologies|frameworks|languages)\b/)) {
+                reply = "I'm proficient in:<br/><br/>• <strong>Frontend:</strong> React, Vue, HTML5, CSS3, JS, TS<br/>• <strong>Backend:</strong> Node.js, Python<br/>• <strong>Design:</strong> Figma, UI/UX<br/>• <strong>Other:</strong> Docker, CI/CD, React Native";
+            }
+            // Experience
+            else if (lowerMsg.match(/\b(experience|work|background|job|history)\b/)) {
+                reply = "I have over 3 years of professional experience as a software developer, specializing in web development. I love tackling complex technical challenges and building scalable, responsive web applications.";
+            }
+            // Specific Projects
+            else if (lowerMsg.match(/\b(dtr|time record|attendance)\b/)) {
+                reply = "The <strong>Daily Time Record</strong> system is a web app built with React, Node.js, and MongoDB for tracking employee attendance and work hours in real-time. You can view it in the <a href='#projects' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>Projects</a> section.";
+            }
+            else if (lowerMsg.match(/\b(restaurant|food)\b/)) {
+                reply = "The <strong>Restaurant Management System</strong> is a cross-platform app using React Native, Firebase, and Redux to manage orders, inventory, and billing workflows.";
+            }
+            else if (lowerMsg.match(/\b(rent|house|room|tuluyan)\b/)) {
+                reply = "<strong>Tuluyan</strong> is a mobile app I built for finding houses and rooms for rent, featuring real-time listings and location-based search.";
+            }
+            else if (lowerMsg.match(/\b(vawc|case|filing)\b/)) {
+                reply = "The <strong>Online VAWC Case Filing System</strong> is a platform built with Vue.js and Python for secure digital filing and real-time case tracking across platforms.";
+            }
+            // General Projects
+            else if (lowerMsg.match(/\b(project|projects|portfolio|work)\b/)) {
+                reply = "I have several key projects in my <a href='#projects' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>portfolio</a>:<br/><br/>1. Real-Time DTR System<br/>2. Restaurant Management System<br/>3. Tuluyan (House/Room Finder)<br/>4. Online VAWC Case Filing System";
+            }
+            // Social Media
+            else if (lowerMsg.match(/\b(social|github|linkedin|twitter)\b/)) {
+                reply = "You can find my social links in the footer, or check out my work on GitHub and connect with me on LinkedIn!";
+            }
+            // About
+            else if (lowerMsg.match(/\b(about|who are you|who is connery)\b/)) {
+                reply = "I'm a passionate mid-level web developer and designer focused on creating exceptional user experiences. I bring ideas to life through clean code and thoughtful interfaces.";
+            }
+            // Gratitude/Closing
+            else if (lowerMsg.match(/\b(thanks|thank you|bye|goodbye|cya)\b/)) {
+                reply = "You're very welcome! Feel free to ask if you need anything else. Have a great day!";
+            }
+            // Easter egg
+            else if (lowerMsg.match(/\b(joke|funny)\b/)) {
+                reply = "Why do programmers prefer dark mode?<br/><br/>Because light attracts bugs! 🐛";
+            }
+            
+            resolve(reply);
+        }, 800 + Math.random() * 800); // simulate realistic typing delay
+    });
+};
+
+// --- Components ---
+
+const ChatMessage = ({ msg }) => {
+    const isBot = msg.sender === 'bot';
+    return (
+        <div className={`flex w-full mt-4 space-x-3 max-w-[85%] ${isBot ? 'mr-auto' : 'ml-auto justify-end'}`}>
+            {isBot && (
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-brandblue-600 flex items-center justify-center text-white shadow-md">
+                    <BotIcon />
+                </div>
+            )}
+            <div>
+                <div className={`p-3 rounded-2xl shadow-sm ${isBot ? 'bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700' : 'bg-brandblue-600 text-white rounded-tr-none'}`}>
+                    {isBot ? (
+                        <p className="text-[13.5px] leading-relaxed font-sans" dangerouslySetInnerHTML={{ __html: msg.text }}></p>
+                    ) : (
+                        <p className="text-[13.5px] leading-relaxed font-sans whitespace-pre-wrap">{msg.text}</p>
+                    )}
+                </div>
+                <span className={`text-[10px] text-gray-400 mt-1 block font-sans ${isBot ? 'text-left' : 'text-right'}`}>
+                    {msg.timestamp}
+                </span>
+            </div>
+            {!isBot && (
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white shadow-md">
+                    <UserIcon />
+                </div>
+            )}
+        </div>
+    );
+};
+
+const QuickPrompts = ({ onSelect }) => {
+    const prompts = [
+        "What are your skills?",
+        "Tell me about your projects",
+        "What is your experience?",
+        "Contact info"
+    ];
+    return (
+        <div className="flex flex-wrap gap-2 p-4 pt-0">
+            {prompts.map((p, i) => (
+                <button
+                    key={i}
+                    onClick={() => onSelect(p)}
+                    className="text-xs font-sans font-medium bg-gray-800/80 text-brandblue-400 border border-brandblue-500/30 hover:bg-brandblue-600 hover:text-white hover:border-brandblue-600 px-3 py-1.5 rounded-full transition-all duration-200"
+                >
+                    {p}
+                </button>
+            ))}
+        </div>
+    );
+};
+
+const Chatbot = () => {
+    // Determine initial state based on viewport size (closed on mobile, open on desktop if appropriate, though prompt says "appears as a floating widget" which usually means closed by default)
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [inputValue, setInputValue] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesContainerRef = useRef(null);
+
+    // Load from local storage
+    useEffect(() => {
+        const savedMessages = localStorage.getItem('chatHistory');
+        if (savedMessages && JSON.parse(savedMessages).length > 0) {
+            setMessages(JSON.parse(savedMessages));
+        } else {
+            setMessages([
+                { sender: 'bot', text: "Hi! I'm Connery's AI assistant. Ask me anything about his skills, projects, or experience!", timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+            ]);
+        }
+    }, []);
+
+    // Save to local storage
+    useEffect(() => {
+        if(messages.length > 0){
+            localStorage.setItem('chatHistory', JSON.stringify(messages));
+        }
+        scrollToBottom();
+    }, [messages]);
+
+    const scrollToBottom = () => {
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    };
+
+    const handleSend = async (text = inputValue) => {
+        if (!text.trim()) return;
+
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const userMsg = { sender: 'user', text, timestamp: time };
+        
+        setMessages(prev => [...prev, userMsg]);
+        setInputValue('');
+        setIsTyping(true);
+
+        const replyText = await getBotResponse(text);
+        
+        const botMsg = { sender: 'bot', text: replyText, timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+        setMessages(prev => [...prev, botMsg]);
+        setIsTyping(false);
+    };
+
+    return (
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            {/* Chat Window */}
+            <div 
+                className={`absolute bottom-16 sm:bottom-20 right-0 w-[calc(100vw-32px)] sm:w-[380px] shadow-2xl rounded-2xl overflow-hidden bg-gray-900 border border-gray-700 flex flex-col transition-all duration-300 transform origin-bottom-right ${isOpen ? 'scale-100 opacity-100 translate-y-0 visible pointer-events-auto' : 'scale-95 opacity-0 translate-y-4 invisible pointer-events-none'}`}
+                style={{ height: '500px', maxHeight: 'calc(100vh - 120px)' }}
+            >
+                {/* Header */}
+                <div className="bg-brandblue-600 p-4 flex justify-between items-center text-white shadow-md z-10 relative">
+                    <div className="flex items-center space-x-3">
+                        <div className="relative">
+                            <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <BotIcon />
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-brandblue-600 rounded-full animate-pulse"></div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-[15px] leading-tight font-sans">Connery AI</h3>
+                            <p className="text-[11px] text-brandblue-100 font-sans">Online & Ready</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsOpen(false)} className="text-brandblue-100 hover:text-white transition-colors p-1 rounded-full hover:bg-brandblue-500">
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                {/* Messages Area */}
+                <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto bg-gray-900 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                    <div className="text-center mb-6 mt-2">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 font-sans">Today</span>
+                    </div>
+                    
+                    {messages.map((msg, idx) => (
+                        <ChatMessage key={idx} msg={msg} />
+                    ))}
+                    
+                    {isTyping && (
+                        <div className="flex w-full mt-4 space-x-3 max-w-[80%]">
+                            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-brandblue-600 flex items-center justify-center text-white">
+                                <BotIcon />
+                            </div>
+                            <div className="bg-gray-800 p-4 rounded-2xl rounded-tl-none border border-gray-700 flex items-center space-x-1.5 h-[42px]">
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Quick Prompts */}
+                {messages.length < 4 && !isTyping && (
+                    <div className="bg-gray-900">
+                        <QuickPrompts onSelect={handleSend} />
+                    </div>
+                )}
+
+                {/* Input Area */}
+                <div className="p-3 sm:p-4 bg-gray-800 border-t border-gray-700">
+                    <div className="relative flex items-center">
+                        <input 
+                            type="text"
+                            className="w-full bg-gray-900 text-gray-100 text-sm rounded-full pl-4 pr-12 py-3.5 focus:outline-none focus:ring-1 focus:ring-brandblue-500 placeholder-gray-500 font-sans shadow-inner"
+                            placeholder="Message the AI..."
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        />
+                        <button 
+                            onClick={() => handleSend()}
+                            className="absolute right-2 p-2 bg-brandblue-600 hover:bg-brandblue-500 text-white rounded-full transition-colors shadow-md"
+                        >
+                            <SendIcon />
+                        </button>
+                    </div>
+                    <div className="text-center mt-2">
+                        <span className="text-[9px] text-gray-500 font-sans">Powered by Connery's Portfolio</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Floating Button */}
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className={`relative flex items-center justify-center p-4 rounded-full shadow-2xl transition-all duration-300 transform bg-brandblue-600 hover:bg-brandblue-500 text-white ${isOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
+            >
+                <ChatIcon />
+                
+                {/* Notification dot (optional, shows if closed and there's logic, but just static here for style) */}
+                {!isOpen && (
+                    <span className="absolute top-0 right-0 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-brandblue-600"></span>
+                    </span>
+                )}
+            </button>
+            
+            {/* Close button that replaces floating button when open */}
+            <button 
+                onClick={() => setIsOpen(false)}
+                className={`absolute bottom-0 right-0 flex items-center justify-center p-4 bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-300 rounded-full shadow-xl transition-all duration-300 transform ${isOpen ? 'rotate-0 scale-100 opacity-100 hover:scale-110 active:scale-95' : '-rotate-90 scale-0 opacity-0 pointer-events-none'}`}
+            >
+                <CloseIcon />
+            </button>
+        </div>
+    );
+};
+
+// Add custom scrollbar styles dynamically
+const rootStyle = document.createElement('style');
+rootStyle.innerHTML = `
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 9999px; }
+    .scrollbar-track-transparent::-webkit-scrollbar-track { background-color: transparent; }
+`;
+document.head.appendChild(rootStyle);
+
+const root = ReactDOM.createRoot(document.getElementById('chatbot-root'));
+root.render(<Chatbot />);
+    </script>
+
     <!-- Smooth scroll script -->
     <script src="script.js"></script>
 </body>
