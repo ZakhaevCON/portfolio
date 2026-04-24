@@ -378,6 +378,36 @@
     }
 
     // ============================================
+    // OJT Blog -> trigger AI fetch
+    // ============================================
+    function initOjtAiTriggers() {
+        const entries = document.querySelectorAll('.ojt-entry');
+        if (entries.length === 0) return;
+
+        entries.forEach((entry) => {
+            const titleEl = entry.querySelector('.ojt-week');
+            const query = titleEl ? titleEl.textContent.trim() : '';
+            if (!query) return;
+
+            entry.setAttribute('role', 'button');
+            entry.setAttribute('tabindex', '0');
+            entry.setAttribute('aria-label', `Ask AI about ${query}`);
+
+            const fire = () => {
+                window.dispatchEvent(new CustomEvent('connery-ai:ask', { detail: { query } }));
+            };
+
+            entry.addEventListener('click', fire);
+            entry.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fire();
+                }
+            });
+        });
+    }
+
+    // ============================================
     // Initialize All Functions
     // ============================================
     function init() {
@@ -397,6 +427,7 @@
         initKeyboardNavigation();
         initLazyLoading();
         initSlideshow();
+        initOjtAiTriggers();
 
         // Update active nav link on scroll
         window.addEventListener('scroll', updateActiveNavLink);

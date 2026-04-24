@@ -1,0 +1,144 @@
+{
+  "entries": [
+    {
+      "id": "research-festival",
+      "title": "Research Festival",
+      "type": "event",
+      "summary": "Presented our system to fellow students during the Research Festival.",
+      "details": "Our team proudly presented the system during the Research Festival, showcasing its purpose, key features, and real-world impact. We engaged with visitors, explained how it works, and answered questions while highlighting how the solution supports real community needs."
+    },
+    {
+      "id": "top-performing-team",
+      "title": "Top Performing Team",
+      "type": "event",
+      "summary": "Recognized as a top-performing group during the Research Festival.",
+      "details": "We stood out during the Research Festival by presenting confidently, engaging the audience, and addressing questions clearly. This highlights our teamwork, preparation, and strong understanding of the project."
+    },
+    {
+      "id": "client-meeting-deployment",
+      "title": "Meeting with our client for deployment",
+      "type": "event",
+      "summary": "Aligned requirements and deployment plan with the client.",
+      "details": "We met with our client to finalize requirements, confirm implementation details, and ensure the system aligns with their needs. The discussion helped prepare for a smooth deployment through clear communication and planning."
+    },
+    {
+      "id": "deployment-day",
+      "title": "Deployment Day",
+      "type": "event",
+      "summary": "Installed and launched the system in the client’s environment.",
+      "details": "Deployment day marked the successful setup, configuration, and verification of the system in the actual environment. This reflects the culmination of planning, testing, and collaboration before the system went live for real-world use."
+    },
+    {
+      "id": "certificate-successful-deployment",
+      "title": "Giving Certificate of Successful deployment",
+      "type": "event",
+      "summary": "Received a certificate recognizing successful deployment.",
+      "details": "Our team received a Certificate of Successful Deployment, recognizing the successful implementation and turnover of the system. It reflects our commitment to delivering a reliable solution that meets the client’s requirements."
+    },
+    {
+      "id": "week-1",
+      "title": "Week 1",
+      "type": "week",
+      "week": 1,
+      "summary": "Orientation and introduction to workplace policies and routines.",
+      "details": "Week 1 involved orientation and introduction to the workplace, including rules, policies, expected conduct, and daily routines. We were guided on workflow expectations and office procedures to help us adjust to the professional environment."
+    },
+    {
+      "id": "week-2",
+      "title": "Week 2",
+      "type": "week",
+      "week": 2,
+      "summary": "More independent tasks and a progress discussion with the CEO.",
+      "details": "Week 2 focused on completing tasks more independently and strengthening problem-solving through hands-on experience. We also met with our CEO to discuss progress, receive feedback, and gain insights to improve our workflow and performance."
+    },
+    {
+      "id": "week-3",
+      "title": "Week 3",
+      "type": "week",
+      "week": 3,
+      "summary": "Mid-training reflection and improvements based on feedback.",
+      "details": "Week 3 centered on reflecting on performance and identifying areas for improvement based on supervisor feedback. This helped us recognize strengths, address weaknesses, and improve efficiency, accuracy, and professional growth."
+    },
+    {
+      "id": "week-4",
+      "title": "Week 4",
+      "type": "week",
+      "week": 4,
+      "summary": "Focused on accuracy, consistency, and meeting deadlines.",
+      "details": "Week 4 emphasized improving accuracy and consistency while completing tasks within deadlines. We continued applying learnings and building discipline in daily work."
+    },
+    {
+      "id": "week-5",
+      "title": "Week 5",
+      "type": "week",
+      "week": 5,
+      "summary": "Handled more complex tasks and learned best practices.",
+      "details": "Week 5 included assisting with more complex activities and learning best practices from the team. This improved our confidence and ability to handle larger responsibilities."
+    },
+    {
+      "id": "week-6",
+      "title": "Week 6",
+      "type": "week",
+      "week": 6,
+      "summary": "Improved workflow and developed professional habits.",
+      "details": "Week 6 focused on improving workflow, building professional habits, and maintaining quality output. We continued learning through real workplace tasks and collaboration."
+    },
+    {
+      "id": "week-7",
+      "title": "Week 7",
+      "type": "week",
+      "week": 7,
+      "summary": "Collaborated more and contributed to team goals.",
+      "details": "Week 7 emphasized collaboration and contributing to team goals and daily operations. We practiced clear communication and teamwork to complete tasks smoothly."
+    },
+    {
+      "id": "week-8",
+      "title": "Week 8",
+      "type": "week",
+      "week": 8,
+      "summary": "Refined skills and applied lessons to new tasks.",
+      "details": "Week 8 focused on refining skills through repetition and applying lessons learned to new tasks. This helped strengthen our confidence and consistency in output."
+    },
+    {
+      "id": "week-9",
+      "title": "Week 9",
+      "type": "week",
+      "week": 9,
+      "summary": "Worked with minimal supervision and stronger confidence.",
+      "details": "Week 9 involved handling responsibilities with minimal supervision while maintaining quality and professionalism. This week highlighted improved confidence and independence."
+    },
+    {
+      "id": "week-10",
+      "title": "Week 10",
+      "type": "week",
+      "week": 10,
+      "summary": "Ensured documentation follows workplace standards.",
+      "details": "Week 10 focused on completing documentation and ensuring all outputs follow workplace standards. We double-checked accuracy and completeness before submission."
+    },
+    {
+      "id": "week-11",
+      "title": "Week 11",
+      "type": "week",
+      "week": 11,
+      "summary": "Prepared for completion of OJT requirements.",
+      "details": "Week 11 included supporting final tasks and preparing for completion of OJT requirements. We coordinated with the team and ensured priorities were handled."
+    },
+    {
+      "id": "week-12",
+      "title": "Week 12",
+      "type": "week",
+      "week": 12,
+      "summary": "Wrap-up improvements and coordination for completion.",
+      "details": "Week 12 involved final improvements to ensure quality and completeness of outputs, followed by wrap-up activities to close pending tasks. We continued coordinating with the team to confirm all requirements were completed."
+    },
+    {
+      "id": "week-13",
+      "title": "Week 13",
+      "type": "week",
+      "week": 13,
+      "summary": "Final documentation and reflection on overall learning.",
+      "details": "Week 13 focused on finalizing documentation, ensuring accuracy and completeness of requirements, and preparing acknowledgements for the people who supported the training journey. It also included reflection on lessons learned, skills gained, challenges overcome, and overall growth throughout the OJT."
+    }
+  ]
+}
+
