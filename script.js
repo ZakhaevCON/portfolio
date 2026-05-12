@@ -321,88 +321,170 @@
     }
 
     // ============================================
-    // Gallery Slideshow
+    // OJT gallery — horizontal carousel (scroll-snap)
     // ============================================
-    function initSlideshow() {
-        let slideIndex = 1;
-        const slides = document.querySelectorAll(".slide");
-        const dots = document.querySelectorAll(".dot");
-        const prevBtn = document.querySelector(".prev-slide");
-        const nextBtn = document.querySelector(".next-slide");
+    function initOjtGalleryCarousel() {
+        const viewport = document.getElementById('ojtCarouselViewport');
+        const root = document.getElementById('ojtSlideshow');
+        if (!viewport || !root) return;
 
-        if (slides.length === 0) return;
+        const slides = Array.from(viewport.querySelectorAll('.ojt-slide'));
+        const n = slides.length;
+        if (n === 0) return;
 
-        function showSlides(n) {
-            if (n > slides.length) slideIndex = 1;
-            if (n < 1) slideIndex = slides.length;
-            
-            slides.forEach(slide => slide.style.display = "none");
-            dots.forEach(dot => dot.className = dot.className.replace(" active", ""));
-            
-            slides[slideIndex - 1].style.display = "block";
-            dots[slideIndex - 1].className += " active";
-        }
+        const prevBtn = document.getElementById('ojtPrev');
+        const nextBtn = document.getElementById('ojtNext');
+        const thumbsHost = document.getElementById('ojtThumbs');
+        const countCurrent = document.getElementById('ojtSlideCurrent');
+        const countTotal = document.getElementById('ojtSlideTotal');
+        const progressFill = document.getElementById('ojtProgressFill');
 
-        // Initialize first slide
-        showSlides(slideIndex);
+        const reduceMotion = window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // Event listeners for prev/next
-        if (prevBtn) prevBtn.addEventListener('click', () => showSlides(slideIndex -= 1));
-        if (nextBtn) nextBtn.addEventListener('click', () => showSlides(slideIndex += 1));
+        if (countTotal) countTotal.textContent = String(n);
 
-        // Event listeners for dots
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                slideIndex = index + 1;
-                showSlides(slideIndex);
-            });
+        slides.forEach((slide, i) => {
+            const body = slide.querySelector('.ojt-body');
+            if (!body || body.querySelector('.ojt-ask-ai')) return;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ojt-ask-ai';
+            btn.textContent = 'Ask AI about this';
+            const title = slide.querySelector('.ojt-week');
+            const titleText = title ? title.textContent.trim() : '';
+            btn.setAttribute('aria-label', titleText ? `Ask AI about ${titleText}` : 'Ask AI about this OJT entry');
+            body.appendChild(btn);
         });
 
-        // Auto slideshow feature
-        let slideInterval = setInterval(() => {
-            slideIndex++;
-            showSlides(slideIndex);
-        }, 5000); // Change image every 5 seconds
-
-        // Pause on hover
-        const slideshowContainer = document.querySelector(".slideshow-container");
-        if (slideshowContainer) {
-            slideshowContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
-            slideshowContainer.addEventListener('mouseleave', () => {
-                slideInterval = setInterval(() => {
-                    slideIndex++;
-                    showSlides(slideIndex);
-                }, 5000);
+        const thumbButtons = [];
+        if (thumbsHost) {
+            slides.forEach((slide, i) => {
+                const img = slide.querySelector('.ojt-media img');
+                const src = img ? img.getAttribute('src') : '';
+                const titleText = slide.querySelector('.ojt-week')?.textContent?.trim() || `Entry ${i + 1}`;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ojt-thumb';
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                btn.setAttribute('aria-label', `Show: ${titleText}`);
+                btn.dataset.index = String(i);
+                if (src) btn.style.backgroundImage = `url("${src}")`;
+                thumbsHost.appendChild(btn);
+                thumbButtons.push(btn);
+                btn.addEventListener('click', () => goTo(i));
             });
         }
+
+        let activeIndex = 0;
+        let scrollRaf = null;
+
+        function scrollBehavior() {
+            return reduceMotion ? 'auto' : 'smooth';
+        }
+
+        function updateA11y(index, alignThumb) {
+            slides.forEach((s, i) => {
+                s.setAttribute('aria-hidden', i === index ? 'false' : 'true');
+            });
+            thumbButtons.forEach((t, i) => {
+                const on = i === index;
+                t.setAttribute('aria-selected', on ? 'true' : 'false');
+                t.classList.toggle('is-active', on);
+                if (on && alignThumb) {
+                    t.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: scrollBehavior() });
+                }
+            });
+        }
+
+        function updateUI(index, alignThumb) {
+            activeIndex = index;
+            if (countCurrent) countCurrent.textContent = String(index + 1);
+            if (progressFill) progressFill.style.width = `${((index + 1) / n) * 100}%`;
+            updateA11y(index, Boolean(alignThumb));
+        }
+
+        function slideWidth() {
+            return viewport.clientWidth || 1;
+        }
+
+        function goTo(i) {
+            const next = ((i % n) + n) % n;
+            const w = slideWidth();
+            viewport.scrollTo({
+                left: next * w,
+                behavior: scrollBehavior()
+            });
+            updateUI(next, true);
+        }
+
+        function readIndexFromScroll() {
+            const w = slideWidth();
+            if (w <= 0) return 0;
+            let idx = Math.round(viewport.scrollLeft / w);
+            idx = Math.max(0, Math.min(n - 1, idx));
+            return idx;
+        }
+
+        function onScroll() {
+            if (scrollRaf) cancelAnimationFrame(scrollRaf);
+            scrollRaf = requestAnimationFrame(() => {
+                const idx = readIndexFromScroll();
+                if (idx !== activeIndex) updateUI(idx, false);
+            });
+        }
+
+        viewport.addEventListener('scroll', onScroll, { passive: true });
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => goTo(activeIndex - 1));
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => goTo(activeIndex + 1));
+        }
+
+        viewport.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goTo(activeIndex - 1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                goTo(activeIndex + 1);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goTo(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goTo(n - 1);
+            }
+        });
+
+        window.addEventListener('resize', debounce(() => {
+            const w = slideWidth();
+            viewport.scrollTo({ left: activeIndex * w, behavior: 'auto' });
+        }, 120));
+
+        updateUI(0, false);
+        viewport.scrollLeft = 0;
     }
 
     // ============================================
-    // OJT Blog -> trigger AI fetch
+    // OJT — Ask AI button (per slide)
     // ============================================
     function initOjtAiTriggers() {
-        const entries = document.querySelectorAll('.ojt-entry');
-        if (entries.length === 0) return;
+        const buttons = document.querySelectorAll('.ojt-ask-ai');
+        if (buttons.length === 0) return;
 
-        entries.forEach((entry) => {
-            const titleEl = entry.querySelector('.ojt-week');
+        buttons.forEach((btn) => {
+            const entry = btn.closest('.ojt-entry');
+            const titleEl = entry ? entry.querySelector('.ojt-week') : null;
             const query = titleEl ? titleEl.textContent.trim() : '';
             if (!query) return;
 
-            entry.setAttribute('role', 'button');
-            entry.setAttribute('tabindex', '0');
-            entry.setAttribute('aria-label', `Ask AI about ${query}`);
-
-            const fire = () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 window.dispatchEvent(new CustomEvent('connery-ai:ask', { detail: { query } }));
-            };
-
-            entry.addEventListener('click', fire);
-            entry.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    fire();
-                }
             });
         });
     }
@@ -426,7 +508,7 @@
         initContactForm();
         initKeyboardNavigation();
         initLazyLoading();
-        initSlideshow();
+        initOjtGalleryCarousel();
         initOjtAiTriggers();
 
         // Update active nav link on scroll
