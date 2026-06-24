@@ -130,39 +130,38 @@
     // Intersection Observer for Scroll Animations
     // ============================================
     function initScrollAnimations() {
-        // Check if user prefers reduced motion
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        if (prefersReducedMotion) {
-            return; // Skip animations if user prefers reduced motion
-        }
+        if (prefersReducedMotion) return;
 
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+        const animateElements = document.querySelectorAll(
+            '.skill-card, .stat-item, .about-content'
+        );
+
+        if (animateElements.length === 0) return;
 
         const observer = new IntersectionObserver(function(entries) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
                 }
             });
-        }, observerOptions);
-
-        // Observe elements for animation
-        const animateElements = document.querySelectorAll(
-            '.skill-card, .project-card, .stat-item, .about-content'
-        );
+        }, {
+            threshold: 0.12,
+            rootMargin: '0px 0px -40px 0px'
+        });
 
         animateElements.forEach((el, index) => {
-            // Set initial state
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-            
-            observer.observe(el);
+            el.classList.add('scroll-animate');
+            el.style.setProperty('--scroll-delay', `${Math.min(index * 0.04, 0.16)}s`);
+
+            const rect = el.getBoundingClientRect();
+            const inView = rect.top < window.innerHeight && rect.bottom > 0;
+            if (inView) {
+                el.classList.add('is-visible');
+            } else {
+                observer.observe(el);
+            }
         });
     }
 
@@ -511,17 +510,12 @@
         initOjtGalleryCarousel();
         initOjtAiTriggers();
 
-        // Update active nav link on scroll
-        window.addEventListener('scroll', updateActiveNavLink);
-        updateActiveNavLink(); // Initial check
+        updateActiveNavLink();
 
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', function() {
-            updateActiveNavLink();
-        });
+        window.addEventListener('popstate', updateActiveNavLink);
 
-        // Log initialization (remove in production)
-        console.log('Portfolio website initialized successfully');
+        const optimizedScrollHandler = debounce(updateActiveNavLink, 16);
+        window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
     }
 
     // Start initialization
@@ -546,12 +540,5 @@
             timeout = setTimeout(later, wait);
         };
     }
-
-    // Optimize scroll handlers with debouncing
-    const optimizedScrollHandler = debounce(() => {
-        updateActiveNavLink();
-    }, 10);
-
-    window.addEventListener('scroll', optimizedScrollHandler);
 
 })();

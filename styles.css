@@ -503,7 +503,7 @@ a:hover {
 }
 
 .hero-content {
-    animation: fadeInUp 0.8s ease-out;
+    animation: fadeInUp 0.45s ease-out;
 }
 
 .hero-greeting {
@@ -553,7 +553,7 @@ a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: fadeIn 1s ease-out 0.3s both;
+    animation: fadeIn 0.4s ease-out both;
 }
 
 .hero-image-wrapper {
@@ -863,6 +863,15 @@ section {
     font-size: var(--font-size-xl);
     margin-bottom: var(--spacing-sm);
     color: var(--color-text);
+}
+
+.project-url {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-sm);
+    word-break: break-word;
+    opacity: 0.85;
 }
 
 .project-description {
@@ -1180,13 +1189,26 @@ a.project-card:focus-visible {
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(16px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.scroll-animate {
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+        opacity 0.3s ease var(--scroll-delay, 0s),
+        transform 0.3s ease var(--scroll-delay, 0s);
+}
+
+.scroll-animate.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 @keyframes float {
