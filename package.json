@@ -1,0 +1,7 @@
+{
+  "name": "connery-portfolio",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

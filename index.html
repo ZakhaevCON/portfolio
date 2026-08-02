@@ -387,35 +387,6 @@ Features real-time case tracking, secure digital filing, and seamless access acr
                         <span class="project-live-cta"><span class="project-live-cta-icon" aria-hidden="true">↗</span> Live website</span>
                     </div>
                 </a>
-                <a href="https://www.serioussportstrainingacademy.com/" class="project-card project-card--live-site" target="_blank" rel="noopener noreferrer" aria-labelledby="project-title-ssta">
-                    <div class="project-image">
-                        <img
-                            src="https://www.serioussportstrainingacademy.com/_next/image?url=%2Fimages%2Fabout-hero.png&amp;w=828&amp;q=75"
-                            srcset="https://www.serioussportstrainingacademy.com/_next/image?url=%2Fimages%2Fabout-hero.png&amp;w=640&amp;q=75 640w, https://www.serioussportstrainingacademy.com/_next/image?url=%2Fimages%2Fabout-hero.png&amp;w=828&amp;q=75 828w, https://www.serioussportstrainingacademy.com/_next/image?url=%2Fimages%2Fabout-hero.png&amp;w=1200&amp;q=75 1200w"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, min(420px, 90vw)"
-                            alt="Serious Sports Training Academy — homepage hero preview"
-                            loading="lazy"
-                            decoding="async"
-                            width="1200"
-                            height="630">
-                        <div class="project-overlay">
-                            <span class="project-link">Live website</span>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <span class="project-category">Sports &amp; fitness education</span>
-                        <h3 class="project-title" id="project-title-ssta">Serious Sports Training Academy</h3>
-                        <p class="project-description">
-                            Sports and fitness training academy website with accredited courses — internationally recognised qualifications and hands-on coaching pathways.
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Next.js</span>
-                            <span class="tag">Active IQ</span>
-                            <span class="tag">Education</span>
-                        </div>
-                        <span class="project-live-cta"><span class="project-live-cta-icon" aria-hidden="true">↗</span> Live website</span>
-                    </div>
-                </a>
                 <a href="https://tamworth-brighter-drives.vercel.app/" class="project-card project-card--live-site" target="_blank" rel="noopener noreferrer" aria-labelledby="project-title-tamworth">
                     <div class="project-image">
                         <img
@@ -1608,7 +1579,13 @@ const BotIcon = () => (
     </svg>
 );
 
-// --- Mock API Logic ---
+// --- AI Chat Backend ---
+// Points to the Vercel serverless function in /api/chat.js, which holds the Gemini API key
+// server-side. If this site is deployed on Vercel as-is, the relative path works same-origin.
+// If the site stays on GitHub Pages while the API lives on a separate Vercel deployment,
+// replace this with the full https://<your-vercel-app>.vercel.app/api/chat URL.
+const CHAT_API_ENDPOINT = '/api/chat';
+
 let __ojtDataCache = null;
 let __ojtDataPromise = null;
 
@@ -1655,121 +1632,94 @@ const getOjtData = async () => {
     return __ojtDataPromise;
 };
 
-const matchOjtQuery = (lowerMsg) => {
-    if (lowerMsg.includes('research festival')) return { kind: 'title', value: 'Research Festival' };
+// Builds a plain-text snapshot of the portfolio's real content (about, skills, projects,
+// contact, OJT log) so the AI answers are grounded in what's actually on the page instead
+// of guessing or going stale as the site changes.
+let __siteContextCache = null;
 
-    const weekMatch = lowerMsg.match(/\bweek\s*(\d{1,2})\b/);
-    if (weekMatch) {
-        const weekNum = Number(weekMatch[1]);
-        if (Number.isFinite(weekNum) && weekNum >= 1 && weekNum <= 13) return { kind: 'week', value: weekNum };
+const buildSiteContext = async () => {
+    if (__siteContextCache) return __siteContextCache;
+
+    const lines = [];
+
+    const aboutIntro = document.querySelector('.about-intro')?.textContent?.trim();
+    const aboutDetails = document.querySelector('.about-details')?.textContent?.trim();
+    if (aboutIntro || aboutDetails) {
+        lines.push('ABOUT CONNERY:', [aboutIntro, aboutDetails].filter(Boolean).join(' '), '');
     }
 
-    return null;
+    const stats = Array.from(document.querySelectorAll('.stat-item')).map((el) => {
+        const num = el.querySelector('.stat-number')?.textContent?.trim();
+        const label = el.querySelector('.stat-label')?.textContent?.trim();
+        return num && label ? `${num} ${label}` : null;
+    }).filter(Boolean);
+    if (stats.length) lines.push('STATS:', stats.join(', '), '');
+
+    const skills = Array.from(document.querySelectorAll('.skill-card')).map((el) => {
+        const title = el.querySelector('.skill-title')?.textContent?.trim();
+        const desc = el.querySelector('.skill-description')?.textContent?.trim();
+        return title ? `- ${title}: ${desc || ''}` : null;
+    }).filter(Boolean);
+    if (skills.length) lines.push('SKILLS:', skills.join('\n'), '');
+
+    const projects = Array.from(document.querySelectorAll('.project-card, a.project-card')).map((el) => {
+        const title = el.querySelector('.project-title')?.textContent?.trim();
+        const category = el.querySelector('.project-category')?.textContent?.trim();
+        const desc = el.querySelector('.project-description')?.textContent?.trim().replace(/\s+/g, ' ');
+        const tags = Array.from(el.querySelectorAll('.tag')).map((t) => t.textContent.trim()).join(', ');
+        const link = el.tagName === 'A' ? el.getAttribute('href') : null;
+        if (!title) return null;
+        return `- ${title} (${category || 'Project'}): ${desc || ''}${tags ? ` [Tags: ${tags}]` : ''}${link ? ` [Live: ${link}]` : ''}`;
+    }).filter(Boolean);
+    if (projects.length) lines.push('PROJECTS:', projects.join('\n'), '');
+
+    try {
+        const ojt = await getOjtData();
+        const entries = Array.isArray(ojt?.entries) ? ojt.entries : [];
+        if (entries.length) {
+            const ojtLines = entries.map((e) => {
+                const label = e.week ? `Week ${e.week}` : e.title;
+                return `- ${label}${e.title && e.week ? ` (${e.title})` : ''}: ${e.summary || ''}`;
+            });
+            lines.push('ON-THE-JOB TRAINING (OJT) LOG:', ojtLines.join('\n'), '');
+        }
+    } catch (e) {
+        // OJT data optional — omit from context if it fails to load
+    }
+
+    lines.push('CONTACT:', "Email: lilconney766@gmail.com, Phone: +63 919 2048 986, or use the contact form at #contact.");
+
+    __siteContextCache = lines.join('\n');
+    return __siteContextCache;
 };
 
-const formatOjtEntryHtml = (entry) => {
-    const safeTitle = entry?.title ?? 'OJT';
-    const safeSummary = entry?.summary ?? '';
-    const safeDetails = entry?.details ?? '';
+const getAiResponse = async (message, history) => {
+    let context = '';
+    try {
+        context = await buildSiteContext();
+    } catch (e) {
+        context = '';
+    }
 
-    return `
-        <div>
-            <div style="font-weight: 700; margin-bottom: 6px;">${safeTitle}</div>
-            ${safeSummary ? `<div style="opacity: 0.95; margin-bottom: 8px;">${safeSummary}</div>` : ''}
-            ${safeDetails ? `<div style="opacity: 0.9;">${safeDetails}</div>` : ''}
-        </div>
-    `;
-};
+    try {
+        const res = await fetch(CHAT_API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, history, context }),
+        });
 
-const getBotResponse = (message) => {
-    return new Promise((resolve) => {
-        setTimeout(async () => {
-            const lowerMsg = String(message || '').toLowerCase();
-            let reply = "I'm not exactly sure about that! Try asking about my <strong>skills</strong>, <strong>projects</strong>, or <strong>experience</strong>.";
+        const data = await res.json().catch(() => null);
 
-            // OJT fetch triggers (Research Festival + Week 1-13)
-            const ojtQuery = matchOjtQuery(lowerMsg);
-            if (ojtQuery) {
-                try {
-                    const data = await getOjtData();
-                    const entries = Array.isArray(data?.entries) ? data.entries : [];
+        if (!res.ok || !data) {
+            return data?.error
+                ? `Sorry, I ran into an issue: ${data.error}`
+                : "Sorry, I'm having trouble connecting to the AI service right now. Please try again in a moment, or reach out directly at <strong>lilconney766@gmail.com</strong>.";
+        }
 
-                    let entry = null;
-                    if (ojtQuery.kind === 'title') {
-                        entry = entries.find((e) => String(e?.title || '').toLowerCase() === String(ojtQuery.value).toLowerCase());
-                    } else if (ojtQuery.kind === 'week') {
-                        entry = entries.find((e) => Number(e?.week) === Number(ojtQuery.value));
-                    }
-
-                    if (entry) {
-                        reply = formatOjtEntryHtml(entry);
-                        resolve(reply);
-                        return;
-                    }
-
-                    reply = "I couldn't find that OJT entry yet. If you want, I can add it to the data file.";
-                    resolve(reply);
-                    return;
-                } catch (e) {
-                    reply = "I couldn't load the OJT data file right now. Please make sure <strong>ojt-data.json</strong> exists in the same folder as <strong>index.html</strong>.";
-                    resolve(reply);
-                    return;
-                }
-            }
-
-            // Greetings
-            if (lowerMsg.match(/\b(hi|hello|hey|greetings|morning|afternoon|evening)\b/)) {
-                reply = "Hello there! I'm Connery's AI assistant. How can I help you learn more about his professional background today?";
-            }
-            // Contact
-            else if (lowerMsg.match(/\b(contact|email|phone|hire|reach|message)\b/)) {
-                reply = "You can use the <a href='#contact' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>contact form</a> below, email at <strong>lilconney766@gmail.com</strong>, or call at <strong>+63 919 2048 986</strong>. Let's work together!";
-            }
-            // Skills & Tech
-            else if (lowerMsg.match(/\b(skill|skills|tech|stack|technologies|frameworks|languages)\b/)) {
-                reply = "I'm proficient in:<br/><br/>• <strong>Frontend:</strong> React, Vue, HTML5, CSS3, JS, TS<br/>• <strong>Backend:</strong> Node.js, Python<br/>• <strong>Design:</strong> Figma, UI/UX<br/>• <strong>Other:</strong> Docker, CI/CD, React Native";
-            }
-            // Experience
-            else if (lowerMsg.match(/\b(experience|work|background|job|history)\b/)) {
-                reply = "I have over 3 years of professional experience as a software developer, specializing in web development. I love tackling complex technical challenges and building scalable, responsive web applications.";
-            }
-            // Specific Projects
-            else if (lowerMsg.match(/\b(dtr|time record|attendance)\b/)) {
-                reply = "The <strong>Daily Time Record</strong> system is a web app built with React, Node.js, and MongoDB for tracking employee attendance and work hours in real-time. You can view it in the <a href='#projects' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>Projects</a> section.";
-            }
-            else if (lowerMsg.match(/\b(restaurant|food)\b/)) {
-                reply = "The <strong>Restaurant Management System</strong> is a cross-platform app using React Native, Firebase, and Redux to manage orders, inventory, and billing workflows.";
-            }
-            else if (lowerMsg.match(/\b(rent|house|room|tuluyan)\b/)) {
-                reply = "<strong>Tuluyan</strong> is a mobile app I built for finding houses and rooms for rent, featuring real-time listings and location-based search.";
-            }
-            else if (lowerMsg.match(/\b(vawc|case|filing)\b/)) {
-                reply = "The <strong>Online VAWC Case Filing System</strong> is a platform built with Vue.js and Python for secure digital filing and real-time case tracking across platforms.";
-            }
-            // General Projects
-            else if (lowerMsg.match(/\b(project|projects|portfolio|work)\b/)) {
-                reply = "I have several key projects in my <a href='#projects' class='text-brandblue-400 hover:text-brandblue-300 underline transition-colors'>portfolio</a>:<br/><br/>1. Real-Time DTR System<br/>2. Restaurant Management System<br/>3. Tuluyan (House/Room Finder)<br/>4. Online VAWC Case Filing System";
-            }
-            // Social Media
-            else if (lowerMsg.match(/\b(social|github|linkedin|twitter)\b/)) {
-                reply = "You can find my social links in the footer, or check out my work on GitHub and connect with me on LinkedIn!";
-            }
-            // About
-            else if (lowerMsg.match(/\b(about|who are you|who is connery)\b/)) {
-                reply = "I'm a passionate mid-level web developer and designer focused on creating exceptional user experiences. I bring ideas to life through clean code and thoughtful interfaces.";
-            }
-            // Gratitude/Closing
-            else if (lowerMsg.match(/\b(thanks|thank you|bye|goodbye|cya)\b/)) {
-                reply = "You're very welcome! Feel free to ask if you need anything else. Have a great day!";
-            }
-            // Easter egg
-            else if (lowerMsg.match(/\b(joke|funny)\b/)) {
-                reply = "Why do programmers prefer dark mode?<br/><br/>Because light attracts bugs! 🐛";
-            }
-
-            resolve(reply);
-        }, 800 + Math.random() * 800); // simulate realistic typing delay
-    });
+        return data.reply || "I didn't quite catch that — could you rephrase your question?";
+    } catch (e) {
+        return "I'm unable to reach the AI service right now. Please try again shortly, or contact Connery directly at <strong>lilconney766@gmail.com</strong>.";
+    }
 };
 
 // --- Components ---
@@ -1870,8 +1820,8 @@ const Chatbot = () => {
         setInputValue('');
         setIsTyping(true);
 
-        const replyText = await getBotResponse(text);
-        
+        const replyText = await getAiResponse(text, messages.slice(-10));
+
         const botMsg = { sender: 'bot', text: replyText, timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
         setMessages(prev => [...prev, botMsg]);
         setIsTyping(false);
