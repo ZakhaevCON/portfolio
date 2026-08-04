@@ -134,7 +134,7 @@
         if (prefersReducedMotion) return;
 
         const animateElements = document.querySelectorAll(
-            '.skill-card, .stat-item, .about-content'
+            '.skill-card, .stat-item, .about-content, .project-card'
         );
 
         if (animateElements.length === 0) return;
